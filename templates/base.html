@@ -1,0 +1,37 @@
+<!doctype html>
+
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+
+  <title>Flask</title>
+  <meta name="description" content="The HTML5 Herald">
+  <meta name="author" content="SitePoint">
+
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css', v=9.3) }}">
+
+  <!--[if lt IE 9]>
+    <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+  <![endif]-->
+</head>
+
+<body>
+  <header class="header">
+    {% include 'includes/header.html' %}
+  </header>
+  {% block content %}
+{% block mainmenu %}
+      <div class="header-block">
+        <ul class="menu">
+          {% for m in menu %}
+            <li><a href="{{ m.url }}" style="color:red;">{{ m.title }}</a></li>
+          {% endfor %}
+        </ul>
+      </div>
+    {% endblock mainmenu %}
+  {% endblock content %}
+  <footer class="footer">
+    {% include 'includes/footer.html' %}
+  </footer>
+</body>
+</html>

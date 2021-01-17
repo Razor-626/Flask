@@ -1,0 +1,7 @@
+<div class="header-block">
+    <ul class="menu">
+        {% for m in menu %}
+        <li><a href="{{ m.url }}">{{ m.name }}</a></li>
+        {% endfor %}
+    </ul>
+</div>
