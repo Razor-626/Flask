@@ -1,0 +1,21 @@
+{% extends 'base.html' %}
+
+{% block content %}
+    {{ super() }}
+{% for msg in get_flashed_messages() %}
+    <p class="message">{{ msg }}</p>
+{% endfor %}
+    <div class="form-block">
+        <form action="{{ url_for('registr') }}" method="post" class="login-form">
+            <label>Логин</label>
+            <input type="text" name="username">
+            <label>Email</label>
+            <input type="email" name="email">
+            <label>Пароль</label>
+            <input type="password" name="password">
+            <label>Подтверждение пароля</label>
+            <input type="password" name="password_repeate">
+            <input type="submit">
+        </form>
+    </div>
+{% endblock %}

@@ -1,7 +1,7 @@
-import sqlite3
-import os
-from flask import Flask, render_template, request, g, flash, abort
+import sqlite3, os
+from flask import Flask, render_template, request, g, flash, abort, redirect, url_for
 from FDataBase import FDataBase
+from werkzeug.security import generate_password_hash, check_password_hash
 
 DATABASE = '/tmp/flsite.db'
 DEBUG = True
@@ -110,6 +110,23 @@ def auth():
             flash('Ошибка авторизации 2')
 
     return render_template('includes/authorization.html', menu=dbase.getMenu())
+
+@app.route('/registr', methods=['POST', 'GET'])
+def registr():
+    db = get_db()
+    dbase = FDataBase(db)
+    if request.method == 'POST':
+        if len(request.form['username']) > 4 and len(request.form['email']) > 6 and len(request.form['password']) > 6 and request.form['password'] == request.form['password_repeate']:
+            hash = generate_password_hash(request.form['password'])
+            res = dbase.addUser(request.form['username'], request.form['email'], hash)
+            if res:
+                flash('Регистрация прошла успешно.')
+                return redirect(url_for('auth'))
+            else:
+                flash('Ошибка регистрации.')
+        else:
+            flash('Ошибка заполнения полей.')
+    return render_template('includes/registration.html', menu = dbase.getMenu())
 
 if __name__ == '__main__':
     app.run(debug=True)
