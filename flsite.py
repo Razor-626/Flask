@@ -2,6 +2,8 @@ import sqlite3, os
 from flask import Flask, render_template, request, g, flash, abort, redirect, url_for
 from FDataBase import FDataBase
 from werkzeug.security import generate_password_hash, check_password_hash
+from flask_login import LoginManager, login_user, login_required
+from UserLogin import UserLogin
 
 DATABASE = '/tmp/flsite.db'
 DEBUG = True
@@ -11,6 +13,13 @@ app = Flask(__name__)
 app.config.from_object(__name__)
 
 app.config.update(dict(DATABASE=os.path.join(app.root_path, 'flsite.db')))
+
+login_manager = LoginManager(app)
+
+@login_manager.user_loader
+def load_user(user_id):
+    print('load_user')
+    return UserLogin().fromDB(user_id, dbase)
 
 def connect_db():
     conn = sqlite3.connect(app.config['DATABASE'])
@@ -67,6 +76,7 @@ def add_post():
     return render_template('includes/add_post.html', menu = dbase.getMenu())
 
 @app.route('/post/<int:id_post>')
+@login_required
 def showPost(id_post):
     db = get_db()
     dbase = FDataBase(db)
@@ -103,11 +113,13 @@ def auth():
     db = get_db()
     dbase = FDataBase(db)
     if request.method == 'POST':
-        res = dbase.authorization(request.form['username'], request.form['password'])
-        if res:
-            flash('Авторизация прошла успешно.')
-        else:
-            flash('Ошибка авторизации 2')
+        user = dbase.getUserByEmail(request.form['email'])
+        if user and check_password_hash(user['password'], request.form['password']):
+            userlogin = UserLogin().create(user)
+            login_user(userlogin)
+            return redirect(url_for('index'))
+
+        flash('Неверный логин или пароль')
 
     return render_template('includes/authorization.html', menu=dbase.getMenu())
 
