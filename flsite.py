@@ -2,7 +2,7 @@ import sqlite3, os
 from flask import Flask, render_template, request, g, flash, abort, redirect, url_for
 from FDataBase import FDataBase
 from werkzeug.security import generate_password_hash, check_password_hash
-from flask_login import LoginManager, login_user, login_required
+from flask_login import LoginManager, login_user, login_required, logout_user, current_user
 from UserLogin import UserLogin
 
 DATABASE = '/tmp/flsite.db'
@@ -15,11 +15,12 @@ app.config.from_object(__name__)
 app.config.update(dict(DATABASE=os.path.join(app.root_path, 'flsite.db')))
 
 login_manager = LoginManager(app)
+login_manager.login_view = 'auth'
+login_manager.login_message = 'Авторизируйтесь для доступа к данной странице.'
+
 
 @login_manager.user_loader
 def load_user(user_id):
-    db = get_db()
-    dbase = FDataBase(db)
     print('load_user')
     return UserLogin().fromDB(user_id, dbase)
 
@@ -41,11 +42,17 @@ def get_db():
         g.link_db = connect_db()
     return g.link_db
 
+dbase = None
+@app.before_request
+def before_request():
+    """Соединение с БД"""
+    global dbase
+    db = get_db()
+    dbase = FDataBase(db)
+
 @app.route('/')
 @app.route('/index')
 def index():
-    db = get_db()
-    dbase = FDataBase(db)
     return render_template('includes/index.html', menu=dbase.getMenu())
 
 @app.teardown_appcontext
@@ -57,14 +64,10 @@ def close_db(error):
 @app.route('/posts')
 def posts():
     '''Выводим посты'''
-    db = get_db()
-    dbase = FDataBase(db)
     return render_template('includes/posts.html', menu=dbase.getMenu(), posts=dbase.getPosts())
 
 @app.route('/add_post', methods=['POST', "GET"])
 def add_post():
-    db = get_db()
-    dbase = FDataBase(db)
 
     if request.method == "POST":
         if len(request.form['title']) > 4 and len(request.form['description']) > 8:
@@ -80,8 +83,6 @@ def add_post():
 @app.route('/post/<int:id_post>')
 @login_required
 def showPost(id_post):
-    db = get_db()
-    dbase = FDataBase(db)
     title, post = dbase.getPost(id_post)
     if not title:
         abort(404)
@@ -90,14 +91,11 @@ def showPost(id_post):
 
 @app.errorhandler(404)
 def pageNotFound(error):
-    db = get_db()
-    dbase = FDataBase(db)
     return render_template('includes/page404.html', menu=dbase.getMenu())
 
 @app.route('/reg', methods=['POST', 'GET'])
 def reg():
-    db = get_db()
-    dbase = FDataBase(db)
+
     if request.method == 'POST':
         if len(request.form['username']) > 6 and len(request.form['password']) > 8:
             res = dbase.addUser(request.form['username'], request.form['password'])
@@ -112,14 +110,17 @@ def reg():
 
 @app.route('/auth', methods=['POST', 'GET'])
 def auth():
-    db = get_db()
-    dbase = FDataBase(db)
+
+    if current_user.is_authenticated:
+        return redirect(url_for('profile'))
+
     if request.method == 'POST':
         user = dbase.getUserByEmail(request.form['email'])
         if user and check_password_hash(user['password'], request.form['password']):
             userlogin = UserLogin().create(user)
-            login_user(userlogin)
-            return redirect(url_for('index'))
+            rm = True if request.form.get('rememberme') else False
+            login_user(userlogin, remember=rm)
+            return redirect(request.args.get('next') or url_for('profile'))
 
         flash('Неверный логин или пароль')
 
@@ -127,8 +128,7 @@ def auth():
 
 @app.route('/registr', methods=['POST', 'GET'])
 def registr():
-    db = get_db()
-    dbase = FDataBase(db)
+
     if request.method == 'POST':
         if len(request.form['username']) > 4 and len(request.form['email']) > 6 and len(request.form['password']) > 6 and request.form['password'] == request.form['password_repeate']:
             hash = generate_password_hash(request.form['password'])
@@ -141,6 +141,17 @@ def registr():
         else:
             flash('Ошибка заполнения полей.')
     return render_template('includes/registration.html', menu = dbase.getMenu())
+
+@app.route('/profile')
+def profile():
+    return render_template('includes/profile.html', menu= dbase.getMenu(), ID= current_user.get_id())
+
+@app.route('/logout')
+@login_required
+def logout():
+    logout_user()
+    flash('Вы вышли из аккаунта.')
+    return redirect(url_for('auth'))
 
 if __name__ == '__main__':
     app.run(debug=True)
