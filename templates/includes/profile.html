@@ -3,6 +3,27 @@
 {% block content %}
     {{ super() }}
     <h1>Profile</h1>
-    <p>ID:{{ ID }}</p>
-    <a href="{{ url_for('logout') }}">Выйти из аккаунта</a>
+    {% for msg in get_flashed_messages(True) %}
+    <div>{{ msg }}</div>
+    {% endfor %}
+    <div class="profile">
+        <div class="avstar_change_block">
+              <div class="profile_ava">
+                  <img src="{{ url_for('userava') }}">
+              </div>
+            <div class="profile_load">
+                <form action="{{ url_for('upload') }}" method="post" enctype="multipart/form-data">
+                    <input type="file" name="file">
+                    <input type="submit" value="Загрузить">
+                </form>
+            </div>
+        </div>
+        <div class="profile_panel">
+            <p><a href="{{ url_for('logout') }}">Выйти из аккаунта</a></p>
+            <div class="profile_info">
+                <p>Имя: {{ current_user.getName() }}</p>
+                <p>Email: {{ current_user.getEmail() }}</p>
+            </div>
+        </div>
+    </div>
 {% endblock %}

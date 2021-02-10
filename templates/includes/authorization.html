@@ -7,15 +7,23 @@
 {% endfor %}
 <div class="form-block">
     <form action="" method="post" class="login-form">
-        <label>Email</label>
-        <input type="email" name="email">
-        <label>Пароль</label>
-        <input type="password" name="password">
-        <div>
-            <input type="checkbox" name="rememberme">
-            <a href="{{ url_for('registr') }}">Зарегистрироваться</a>
-        </div>
-        <input type="submit">
+        {{ form.hidden_tag() }}
+        {% for field in form if field.name not in ['csrf_token', 'remember', 'submit'] %}
+            <p>{{ field.label() }}</p>
+            {% if field.errors %}
+                {{ field(class='invalid') }}
+            <span class="invalid-feedback">
+                {% for e in field.errors %}
+                {{ e }}
+                {% endfor %}
+            </span>
+            {% else %}
+                {{ field() }}
+            {% endif %}
+        {% endfor %}
+        {{ form.remember.label() }} {{ form.remember() }}
+        {{ form.submit() }}
     </form>
+    <a href="{{ url_for('registr') }}">Зарегистрироваться</a>
 </div>
 {% endblock %}}

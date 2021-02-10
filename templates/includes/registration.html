@@ -7,15 +7,21 @@
 {% endfor %}
     <div class="form-block">
         <form action="{{ url_for('registr') }}" method="post" class="login-form">
-            <label>Логин</label>
-            <input type="text" name="username">
-            <label>Email</label>
-            <input type="email" name="email">
-            <label>Пароль</label>
-            <input type="password" name="password">
-            <label>Подтверждение пароля</label>
-            <input type="password" name="password_repeate">
-            <input type="submit">
+             {{ form.hidden_tag() }}
+        {% for field in form if field.name not in ['csrf_token', 'submit'] %}
+            <p>{{ field.label() }}</p>
+            {% if field.errors %}
+                {{ field(class='invalid') }}
+            <span class="invalid-feedback">
+                {% for e in field.errors %}
+                {{ e }}
+                {% endfor %}
+            </span>
+            {% else %}
+                {{ field() }}
+            {% endif %}
+        {% endfor %}
+        {{ form.submit() }}
         </form>
     </div>
 {% endblock %}
