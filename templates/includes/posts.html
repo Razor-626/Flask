@@ -8,7 +8,7 @@
     </div>
     {% for p in posts %}
     <ul>
-        <li><a href="{{ url_for('showPost', id_post=p.id) }}">{{p.title}}</a></li>
+        <li><a href="{{ url_for('showPost', alias=p.id) }}">{{p.title}}</a></li>
         <li>{{p.description[:50]}}</li>
     </ul>
     {% endfor %}

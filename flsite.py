@@ -5,6 +5,7 @@ from werkzeug.security import generate_password_hash, check_password_hash
 from flask_login import LoginManager, login_user, login_required, logout_user, current_user
 from UserLogin import UserLogin
 from forms import LoginForm, RegistrForm
+from admin.admin import admin
 
 DATABASE = '/tmp/flsite.db'
 DEBUG = True
@@ -15,6 +16,8 @@ app = Flask(__name__)
 app.config.from_object(__name__)
 
 app.config.update(dict(DATABASE=os.path.join(app.root_path, 'flsite.db')))
+
+app.register_blueprint(admin, url_prefix='/admin')
 
 login_manager = LoginManager(app)
 login_manager.login_view = 'auth'
@@ -72,8 +75,8 @@ def posts():
 def add_post():
 
     if request.method == "POST":
-        if len(request.form['title']) > 4 and len(request.form['description']) > 8:
-            res = dbase.addPost(request.form['title'], request.form['description'])
+        if len(request.form['title']) > 4 and len(request.form['description']) > 8 and len(request.form['url']) > 1:
+            res = dbase.addPost(request.form['title'], request.form['url'], request.form['description'])
             if not res:
                 flash('Ошибка добавления стать.')
             else:
@@ -82,10 +85,10 @@ def add_post():
             flash('Ошибка добавления статьи.')
     return render_template('includes/add_post.html', menu = dbase.getMenu())
 
-@app.route('/post/<int:id_post>')
+@app.route('/post/<alias>')
 @login_required
-def showPost(id_post):
-    title, post = dbase.getPost(id_post)
+def showPost(alias):
+    title, post = dbase.getPost(alias)
     if not title:
         abort(404)
 
