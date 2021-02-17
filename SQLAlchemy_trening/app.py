@@ -15,6 +15,8 @@ class Users(db.Model):
     password = db.Column(db.String(500), nullable=True)
     date = db.Column(db.DateTime, default=datetime.utcnow)
 
+    pr = db.relationship('Profile', backref='users', uselist=False)
+
     def __repr__(self):
         return f"<users {self.id}>"
 
@@ -25,6 +27,9 @@ class Profile(db.Model):
     city = db.Column(db.String(100))
 
     user_id = db.Column(db.Integer, db.ForeignKey('users.id'))
+
+    def __repr__(self):
+        return f"<profile {self.id}>"
 
 @app.route('/register', methods=['GET', 'POST'])
 def register():
@@ -46,7 +51,13 @@ def register():
 
 @app.route('/', methods=['GET', 'POST'])
 def index():
-    return render_template('SQLAlchemy_trening/includes/index.html', title='Главная')
+    info = []
+    try:
+        info = Users.query.all()
+    except:
+        print('Ошибка чтения из БД')
+
+    return render_template('SQLAlchemy_trening/includes/index.html', title='Главная', list = info)
 
 if __name__ == '__main__':
     app.run(debug=True)

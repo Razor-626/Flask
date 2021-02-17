@@ -1,5 +1,15 @@
 {% extends 'layout.html' %}
 
 {% block content %}
-
+<ul>
+    {% for l in list %}
+    <li><p>id: {{ l.id }}, email: {{ l.email }}</p>
+        <ul>
+            <li>Имя: {{ l.pr.name }}</li>
+            <li>Возраст: {{ l.pr.old }}</li>
+            <li>Город: {{ l.pr.city }}</li>
+        </ul>
+    </li>
+    {% endfor %}
+</ul>
 {% endblock %}
